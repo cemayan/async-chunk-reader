@@ -1,0 +1,9 @@
+**/logs
+**/*.log
+node_modules
+.vscode
+.idea
+.DS_Store
+.cache-loader
+dist
+input

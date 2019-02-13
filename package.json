@@ -1,0 +1,35 @@
+{
+  "name": "async-chunk-reader",
+  "version": "0.1.1",
+  "description": "Async chunk reader",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "homepage": "https://github.com/cemayan/async-chunk-reader",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cemayan/async-chunk-reader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cemayan/async-chunk-reader/issues"
+  },
+  "keywords": [
+    "chunk",
+    "iterator",
+    "stream-reader",
+    "async-reader",
+    "stream"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Cem Ayan",
+    "email": "cem_ayan@outlook.com",
+    "url": "http://github.com/cemayan"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.2",
+    "@types/node": "^10.12.18"
+  }
+}

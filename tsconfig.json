@@ -1,0 +1,26 @@
+{
+    "version": "3.2.2",
+    "compilerOptions": {
+      "module": "commonjs",
+      "lib": ["es2015", "es2016","esnext.asynciterable"],
+      "target": "es6",
+      "types": ["node"],
+      "skipLibCheck": true,
+      "strictNullChecks": true,
+      "alwaysStrict": true,
+      "noImplicitThis": true,
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitReturns": true,
+      "noUnusedLocals": true,
+      "experimentalDecorators": true,
+      "sourceMap": true,
+      "esModuleInterop": true,
+      "rootDir": "src",
+      "outDir": "dist"
+    },
+    "exclude": [
+      "**/node_modules",
+      //"**/*.d.ts"
+    ]
+  }
+  
