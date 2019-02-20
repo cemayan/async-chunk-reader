@@ -43,15 +43,15 @@ import * as reader from "async-chunk-reader"
 ```javascript
 async function main(){
 
-    const x = await reader
+    const data = await reader
         .init({
             chunk_size: 100000,
             input_file: 'input/mobile_network_201805.csv.gz'
         })
         .get()
 
-    for await(let chunk of  x){
-        console.log(chunk.length)
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
     }
 }
 
@@ -64,14 +64,14 @@ main();
 ```javascript
 async function main(){
 
-    const x = await reader
+    const data = await reader
         .init({
             input_file:  process.stdin
         })
         .get()
 
-    for await(let chunk of  x){
-        console.log(chunk.length)
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
     }
 }
 
@@ -85,14 +85,14 @@ main();
 ```javascript
 async function main(){
 
-    const x = await reader
+    const data = await reader
         .init({
             input_file: "Some string"
         })
         .get()
 
-    for await(let chunk of  x){
-        console.log(chunk.length)
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
     }
 }
 
