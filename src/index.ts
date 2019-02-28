@@ -17,13 +17,9 @@ export interface ReaderParameters{
     input_file : String|Stream
 }
 
-
 events.EventEmitter.defaultMaxListeners = 1000;
-const default_global_settings = {chunk_size : 10000, encoding : "utf8" };
 
-export function init(parameters : InitParameters){
-    default_global_settings.chunk_size = parameters.chunk_size;
-    default_global_settings.encoding = parameters.encoding;
+export function init(parameters : InitParameters =  {chunk_size : 10000, encoding : "utf8", input_file: ""}){
 
     return { get(){
 
@@ -31,10 +27,10 @@ export function init(parameters : InitParameters){
 
         if(typeof(parameters.input_file) == "string"){
             if(path.extname(<string>parameters.input_file)==".gz"){
-                fileStream = fs.createReadStream(<string>parameters.input_file,{ encoding:default_global_settings.encoding }).pipe(gunzip);
+                fileStream = fs.createReadStream(<string>parameters.input_file).pipe(gunzip);
             }  
             else{
-                fileStream = fs.createReadStream(<string>parameters.input_file,{ encoding:default_global_settings.encoding });
+                fileStream = fs.createReadStream(<string>parameters.input_file,{ encoding:parameters.encoding });
             }
 
             fileStream.on('error', (err) => {
@@ -47,7 +43,7 @@ export function init(parameters : InitParameters){
         
             let async_itr =  rl[Symbol.asyncIterator]();   
                 
-            return  readLineByStream(async_itr); 
+            return  readLineByStream(parameters,async_itr); 
         }  
         else if(parameters.input_file instanceof Stream ){
             fileStream = parameters.input_file;
@@ -62,7 +58,7 @@ export function init(parameters : InitParameters){
         
             let async_itr =  rl[Symbol.asyncIterator]();    
 
-            return  readLineByStream(async_itr); 
+            return  readLineByStream(parameters,async_itr); 
         }
         return this;
 
@@ -71,7 +67,7 @@ export function init(parameters : InitParameters){
 }
 
 
-async function readLineByStream(async_itr) {
+async function readLineByStream(parameters:InitParameters ,async_itr) {
 
     return {
         [Symbol.asyncIterator]() {
@@ -79,7 +75,7 @@ async function readLineByStream(async_itr) {
         },
          async next() {
                       
-            let data =  await readMoreData(async_itr); 
+            let data =  await readMoreData(parameters,async_itr); 
             if(data.length== 0){
                 return new Promise((resolve, reject) => {
                     resolve({done : true}  )
@@ -94,12 +90,12 @@ async function readLineByStream(async_itr) {
     }
 }
 
-async function  readMoreData(asyncIterator :AsyncIterator<any>):Promise<Array<any>>{
+async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIterator<any>):Promise<Array<any>>{
 
     let count = 0;
     let arr:Array<object> = [];
 
-    while(count < default_global_settings.chunk_size){
+    while(count < parameters.chunk_size){
         const resolved_obj  =  await asyncIterator.next();
         if(!resolved_obj.done){
             arr.push(resolved_obj);
