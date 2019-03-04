@@ -2,6 +2,8 @@
 
 This library allows you to read large amounts of data in chunks.
 
+[Click to see how it works](https://runkit.com/cemayan/async-chunk-reader)
+
 ## Install
 ```console
 npm install --save async-chunk-reader
