@@ -2,61 +2,103 @@ import fs from "fs";
 import path from "path"
 import readline from "readline"
 import zlib from "zlib"
-import { Stream } from "stream";
+import { Stream, Readable } from "stream";
 import events from "events";
+import yauzl from "yauzl";
 
 const gunzip = zlib.createGunzip();
 
 export interface InitParameters{
-    chunk_size : number,
-    encoding : string,
-    input_file : String|Stream,
+    chunkSize : number,
+    encoding? : string,
+    inputFile : String|Stream,
+    selectedFileName? :String
 }
 
 export interface ReaderParameters{
     input_file : String|Stream
 }
 
+interface IteratorResult<T> {
+    done: boolean;
+    value?: T;
+}
+interface AsyncIterator<T> {
+    next(value?: any): Promise<IteratorResult<T>>;
+    return?(value?: any): Promise<IteratorResult<T>>;
+    throw?(e?: any): Promise<IteratorResult<T>>;
+}
+
+interface AsyncIterableIterator<T> extends AsyncIterator<T> {
+    [Symbol.asyncIterator](): AsyncIterableIterator<T>;
+}
+
+
+interface IterableInterface {
+    [Symbol.asyncIterator]():  any
+     next(): Promise<IteratorResult<object>>;
+}
+
 events.EventEmitter.defaultMaxListeners = 1000;
 
-export function init(parameters : InitParameters =  {chunk_size : 10000, encoding : "utf8", input_file: ""}){
+export  function init(parameters : InitParameters =  {chunkSize : 10000, encoding : "utf8", inputFile: "", selectedFileName: ""}) {
 
-    return { get(){
+    return {async get(){
 
         let fileStream;
+        let zipFileStream ;
 
-        if(typeof(parameters.input_file) == "string"){
-            if(path.extname(<string>parameters.input_file)==".gz"){
-                fileStream = fs.createReadStream(<string>parameters.input_file).pipe(gunzip);
-            }  
+        if(typeof(parameters.inputFile) == "string"){
+            if(path.extname(<string>parameters.inputFile)==".gz"){
+                fileStream = fs.createReadStream(<string>parameters.inputFile).pipe(gunzip);
+            } 
+            if(path.extname(<string>parameters.inputFile)==".zip"){
+
+                zipFileStream =  new Promise((resolve,reject) => {
+                yauzl.open(<string>parameters.inputFile, {lazyEntries: true}, function(err, zipfile) {
+                    if (err) throw err;
+                    zipfile.readEntry();
+                
+                    zipfile.on("entry", function(entry) {
+
+                        zipfile.openReadStream(entry,function(err, readStream) {
+                            if (err){
+                                reject(err);
+                            }
+                            if(entry.fileName === parameters.selectedFileName){
+                            resolve(readStream);
+                            }             
+                            zipfile.readEntry();
+                        })
+    
+                    });
+
+                  });
+                })  
+            }
             else{
-                fileStream = fs.createReadStream(<string>parameters.input_file,{ encoding:parameters.encoding });
+                fileStream = fs.createReadStream(<string>parameters.inputFile,{ encoding:parameters.encoding });
             }
 
-            fileStream.on('error', (err) => {
-               throw err;
-            })
-
-            const rl = readline.createInterface({
-                input: fileStream,
+            const rl =readline.createInterface({
+                input: typeof(zipFileStream) === "undefined" ?  fileStream : await zipFileStream,
             });
         
-            let async_itr =  rl[Symbol.asyncIterator]();   
-                
+            let async_itr = rl[Symbol.asyncIterator]();               
             return  readLineByStream(parameters,async_itr); 
         }  
-        else if(parameters.input_file instanceof Stream ){
-            fileStream = parameters.input_file;
+        else if(parameters.inputFile instanceof Stream ){
+            fileStream = parameters.inputFile;
 
             fileStream.on('error', (err) => {
                 throw err;
              })
 
              const rl = readline.createInterface({
-                input: fileStream,
+                input:<Readable>fileStream,
             });
         
-            let async_itr =  rl[Symbol.asyncIterator]();    
+            let async_itr = rl[Symbol.asyncIterator]();    
 
             return  readLineByStream(parameters,async_itr); 
         }
@@ -67,7 +109,7 @@ export function init(parameters : InitParameters =  {chunk_size : 10000, encodin
 }
 
 
-async function readLineByStream(parameters:InitParameters ,async_itr) {
+async function readLineByStream(parameters:InitParameters ,async_itr:AsyncIterableIterator<{}>):Promise<IterableInterface> {
 
     return {
         [Symbol.asyncIterator]() {
@@ -90,12 +132,12 @@ async function readLineByStream(parameters:InitParameters ,async_itr) {
     }
 }
 
-async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIterator<any>):Promise<Array<any>>{
+async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIterableIterator<object>):Promise<Array<object>>{
 
     let count = 0;
     let arr:Array<object> = [];
 
-    while(count < parameters.chunk_size){
+    while(count < parameters.chunkSize){
         const resolved_obj  =  await asyncIterator.next();
         if(!resolved_obj.done){
             arr.push(resolved_obj);

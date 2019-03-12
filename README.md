@@ -4,10 +4,17 @@ This library allows you to read large amounts of data in chunks.
 
 [Click to see how it works](https://runkit.com/cemayan/async-chunk-reader)
 
+
+
 ## Install
 ```console
 npm install --save async-chunk-reader
 ```
+
+## Changelog
+> Added reading from zip file (v1.0.6) 
+
+> Feature to be added :  Reading via url (v1.0.7)
 
 ## API
 ---
@@ -19,6 +26,7 @@ npm install --save async-chunk-reader
 - **chunk_size** :   String 
 - **input_file** : String | Stream
 - **encoding** : String
+- **selectedFileName** String
 
 **get()**
 
@@ -90,6 +98,29 @@ async function main(){
     const data = await reader
         .init({
             input_file: "Some string"
+        })
+        .get()
+
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
+    }
+}
+
+main();
+
+```
+
+
+### with zipfile : 
+
+```javascript
+async function main(){
+
+    const data = await reader
+        .init({
+            chunkSize: 100000,
+            inputFile: 'example/Archive.zip',
+            selectedFileName:'avocado.csv' #file in zip
         })
         .get()
 
