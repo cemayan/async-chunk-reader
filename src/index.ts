@@ -52,7 +52,7 @@ export  function init(parameters : InitParameters =  {chunkSize : 10000, encodin
             if(path.extname(<string>parameters.inputFile)==".gz"){
                 fileStream = fs.createReadStream(<string>parameters.inputFile).pipe(gunzip);
             } 
-            if(path.extname(<string>parameters.inputFile)==".zip"){
+            else if(path.extname(<string>parameters.inputFile)==".zip"){
 
                 zipFileStream =  new Promise((resolve,reject) => {
                 yauzl.open(<string>parameters.inputFile, {lazyEntries: true}, function(err, zipfile) {

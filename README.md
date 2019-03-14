@@ -55,8 +55,8 @@ async function main(){
 
     const data = await reader
         .init({
-            chunk_size: 100000,
-            input_file: 'input/mobile_network_201805.csv.gz'
+            chunkSize: 100000,
+            inputFile: 'input/mobile_network_201805.csv.gz'
         })
         .get()
 
@@ -76,7 +76,7 @@ async function main(){
 
     const data = await reader
         .init({
-            input_file:  process.stdin
+            inputFile:  process.stdin
         })
         .get()
 
@@ -97,7 +97,7 @@ async function main(){
 
     const data = await reader
         .init({
-            input_file: "Some string"
+            inputFile: "Some string"
         })
         .get()
 
