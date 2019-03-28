@@ -6,13 +6,16 @@ import { Stream, Readable } from "stream";
 import events from "events";
 import yauzl from "yauzl";
 
-const gunzip = zlib.createGunzip();
+
+
 
 export interface InitParameters{
     chunkSize : number,
     encoding? : string,
     inputFile : String|Stream,
-    selectedFileName? :String
+    selectedFileName? :String,
+    specialChunkSize?:{[key: number]: number },
+    skipRows? : number
 }
 
 export interface ReaderParameters{
@@ -39,9 +42,11 @@ interface IterableInterface {
      next(): Promise<IteratorResult<object>>;
 }
 
-events.EventEmitter.defaultMaxListeners = 1000;
 
-export  function init(parameters : InitParameters =  {chunkSize : 10000, encoding : "utf8", inputFile: "", selectedFileName: ""}) {
+events.EventEmitter.defaultMaxListeners = 1000;
+//let chunkCounter = 0 ;
+
+export  function init(parameters : InitParameters =  {chunkSize : 10000, encoding : "utf8", inputFile: "", selectedFileName: "", specialChunkSize: {}, skipRows: 0}) {
 
     return {async get(){
 
@@ -50,8 +55,9 @@ export  function init(parameters : InitParameters =  {chunkSize : 10000, encodin
 
         if(typeof(parameters.inputFile) == "string"){
             if(path.extname(<string>parameters.inputFile)==".gz"){
+                const gunzip = zlib.createGunzip()
                 fileStream = fs.createReadStream(<string>parameters.inputFile).pipe(gunzip);
-            } 
+           } 
             else if(path.extname(<string>parameters.inputFile)==".zip"){
 
                 zipFileStream =  new Promise((resolve,reject) => {
@@ -84,7 +90,12 @@ export  function init(parameters : InitParameters =  {chunkSize : 10000, encodin
                 input: typeof(zipFileStream) === "undefined" ?  fileStream : await zipFileStream,
             });
         
-            let async_itr = rl[Symbol.asyncIterator]();               
+            let async_itr:AsyncIterableIterator<{}> = rl[Symbol.asyncIterator]();   
+            
+            if(parameters.hasOwnProperty("skipRows")) {
+                async_itr = skipRow(parameters,async_itr);
+            }
+
             return  readLineByStream(parameters,async_itr); 
         }  
         else if(parameters.inputFile instanceof Stream ){
@@ -137,6 +148,7 @@ async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIter
     let count = 0;
     let arr:Array<object> = [];
 
+
     while(count < parameters.chunkSize){
         const resolved_obj  =  await asyncIterator.next();
         if(!resolved_obj.done){
@@ -144,7 +156,55 @@ async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIter
         }
         count++;
     }
+
+
     return  arr;
 }
 
 
+
+
+// async function  readMoreData(parameters:InitParameters ,asyncIterator :AsyncIterableIterator<object>):Promise<Array<object>>{
+
+//     let count = 0;
+//     let arr:Array<object> = [];
+
+//     let currentChunkSize = 0 ;
+//     if(parameters.hasOwnProperty("specialChunkSize") &&  parameters.specialChunkSize![0] !== 0 ) {
+//         currentChunkSize = parameters.specialChunkSize![chunkCounter]
+//     }
+//     else {
+//         currentChunkSize = parameters.chunkSize
+//     }
+
+
+//     while(count < currentChunkSize){
+//         const resolved_obj  =  await asyncIterator.next();
+//         if(!resolved_obj.done){
+//             arr.push(resolved_obj);
+//         }
+//         count++;
+//     }
+
+  
+//     if(parameters.hasOwnProperty("specialChunkSize")){
+//         chunkCounter++;
+//     }
+
+//     return  arr;
+// }
+
+
+
+
+function skipRow(parameters:InitParameters ,asyncIterator :AsyncIterableIterator<{}>) {
+
+    let count = 0;
+    
+    while(count <  parameters.skipRows!){
+       asyncIterator.next();
+       count++;
+    }
+
+    return asyncIterator;
+} 

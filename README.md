@@ -13,8 +13,8 @@ npm install --save async-chunk-reader
 
 ## Changelog
 > Added reading from zip file (v1.0.6) 
-
-> Feature to be added :  Reading via url (v1.0.7)
+> Added skipRows (v.1.0.8)
+> to be added in the future (v.1.0.9)
 
 ## API
 ---
@@ -133,6 +133,55 @@ main();
 
 ```
 
+
+### specialChunkSize : 
+
+```javascript
+async function main(){
+
+    const data = await reader
+        .init({
+            chunkSize: 100000,
+            inputFile: 'example/Archive.zip',
+            specialChunkSize : {0:10000, 1:40000}
+        })
+        .get()
+
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
+    }
+}
+
+main();
+
+```
+
+
+
+
+
+### to be added in the future (v.1.0.9)
+### skipRows : 
+
+```javascript
+async function main(){
+
+    const data = await reader
+        .init({
+            chunkSize: 100000,
+            inputFile: 'example/Archive.zip',
+            skipRows : 40000
+        })
+        .get()
+
+    for await(let chunk of  data){
+        console.log(chunk.map(d=>d.value))
+    }
+}
+
+main();
+
+```
 
 
 
